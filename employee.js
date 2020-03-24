@@ -66,6 +66,28 @@ function viewAllEmployee() {
     }
   )
 }
+
+function viewAllDepartments() {
+    connection.query(
+        `SELECT dept_name
+        FROM department`,
+        function(err, data) {
+            //   console.log(data)
+            console.table(data)
+        }
+        )
+    }
+
+function viewAllRoles() {
+    connection.query(
+    `SELECT title
+    FROM role`,
+    function(err, data) {
+        //   console.log(data)
+        console.table(data)
+    }
+    )
+}
 // function empByDept(departmentID) {
 //   connection.query(
 //     `SELECT employee.first_name, employee.last_name, department.dept_name
@@ -81,25 +103,3 @@ function viewAllEmployee() {
 //   )
 //   console.log(empByDept)
 // }
-
-function viewAllDepartments() {
-  connection.query(
-    `SELECT dept_name
-        FROM department`,
-    function(err, data) {
-      //   console.log(data)
-      console.table(data)
-    }
-  )
-}
-
-function viewAllRoles() {
-  connection.query(
-    `SELECT title
-        FROM role`,
-    function(err, data) {
-      //   console.log(data)
-      console.table(data)
-    }
-  )
-}
