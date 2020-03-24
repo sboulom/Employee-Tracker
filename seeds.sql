@@ -1,4 +1,7 @@
 USE employee_db;
+TRUNCATE TABLE department;
+TRUNCATE TABLE employee;
+TRUNCATE TABLE role;
 
 INSERT INTO department(dept_name) VALUES ("Sales"), ("Engineering"), ("Finance"), ("Legal");
 
