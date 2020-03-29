@@ -14,12 +14,12 @@ connection.connect(function(err) {
   start()
 })
 var viewAllEmp = 'View all employees'
-var viewByDept = 'View all employees by department'
-var viewAllRoles = 'View all roles'
+var viewByDept = 'View all department'
+var viewAllRole = 'View all roles'
 var addEmp = 'Add Employee'
-var removeEmp = 'Remove Employee'
-var updateEmp = 'Update Employee Role'
-var userProfile = []
+var addRole = 'Add Employee Role'
+var addDepart = 'Add Department'
+var quit = 'Quit'
 //modify
 
 function start() {
@@ -30,10 +30,11 @@ function start() {
       choices: [
         viewAllEmp,
         viewByDept,
-        // viewAllRoles,
+        viewAllRole,
         addEmp,
-        removeEmp,
-        updateEmp
+        addRole,
+        addDepart,
+        quit
       ],
       name: 'employee'
     })
@@ -46,20 +47,22 @@ function start() {
         case viewByDept:
           viewAllDepartments()
           break
-        // case viewAllRole:
-        //   viewAllRoles()
-        //   break
+        case viewAllRole:
+          viewAllRoles()
+          break
         case addEmp:
           addEmployee()
           break
-        case removeEmp:
-          removeEmp()
+        case addRole:
+          addEmpRole()
           break
-        case updateEmp:
-          updateEmp()
+        case addDepart:
+          addDepartment()
           break
         default:
           console.log('ended on default')
+          process.exit()
+        //functionality after selection to exit out
       }
     })
 }
@@ -74,38 +77,34 @@ function viewAllEmployee() {
     function(err, data) {
       //   console.log(data)
       console.table(data)
+      start()
     }
   )
 }
 
-// function viewAllDepartments() {
-//   //incorrect here. get it to work
-//   connection.query(
-//     `SELECT department.dept_name, employee.first_name, employee.last_name
-//     LEFT JOIN department ON department.id = role.department_id`,
+function viewAllDepartments() {
+  connection.query(
+    `SELECT department.id, department.dept_name FROM department`,
 
-//     `SELECT department.dept_name, employee.first_name, employee.last_name
-//         FROM department
-//         LEFT JOIN employee ON department.id = employee.`,
+    function(err, data) {
+      //   console.log(data)
+      console.table(data)
+      start()
+    }
+  )
+}
 
-//     function(err, data) {
-//       //   console.log(data)
-//       console.table(data)
-//     }
-//   )
-// }
-
-// function viewAllRoles() {
-//   connection.query(
-//     `SELECT title
-//     FROM role`,
-//     function(err, data) {
-//       //   console.log(data)
-//       console.table(data)
-//       connection.end()
-//     }
-//   )
-// }
+function viewAllRoles() {
+  connection.query(
+    `SELECT id, title, salary, department_id FROM role`,
+    function(err, data) {
+      //   console.log(data)
+      console.table(data)
+      connection.end()
+      start()
+    }
+  )
+}
 
 function addEmployee(userProfile) {
   inquirer
@@ -129,48 +128,97 @@ function addEmployee(userProfile) {
         type: 'input',
         message: 'Add Title',
         name: 'userRoleId'
-      },
-      {
-        type: 'input',
-        message: 'Add Salary',
-        name: 'userSalary'
-      },
-      {
-        type: 'input',
-        message: 'Add Department',
-        name: 'userDepartment'
       }
     ])
     .then(function(answer) {
+      var manager = answer.userManagerId.split(' ')
       connection.query(
-        {
-          first_name: answer.userFirstName,
-          last_name: answer.userLastName,
-          manager_id: answer.userManagerId,
-          role: answer.userRoleId,
-          salary: answer.userSalary,
-          department_id: answer.userDepartment
-        },
-        function(err) {
-          if (err) throw err
-          console.log('Steven did it')
+        `SELECT id FROM employee WHERE first_name = ? and last_name = ?`[
+          (manager[0], manager[1])
+        ],
+        function(data, err) {
+          connection.query(
+            'INSERT INTO employee SET ?',
+            {
+              first_name: answer.userFirstName,
+              last_name: answer.userLastName,
+              manager_id: data.id,
+              role_id: answer.userRoleId
+            },
+            function(err) {
+              if (err) throw err
+              console.log('Steven did it')
+              start()
+            }
+          )
         }
       )
     })
 }
 
-// function empByDept(departmentID) {
-//   connection.query(
-//     `SELECT employee.first_name, employee.last_name, department.dept_name
-//         FROM employee
-//         LEFT JOIN role on employee.role_id = role.id
-//         LEFT JOIN department on department.id = role.department_id
-//         WHERE department.id = ?`,
-//     departmentID,
-//     function(err, data) {
-//       console.log(data)
-//       console.table(data)
-//     }
-//   )
-//   console.log(empByDept)
-// }
+function addEmpRole() {
+  inquirer
+    .prompt([
+      {
+        type: 'input',
+        message: 'Please add employee title',
+        name: 'roleTitle'
+      },
+      {
+        type: 'input',
+        message: 'Salary',
+        name: 'Salary'
+      },
+      {
+        type: 'input',
+        message: 'department',
+        name: 'department'
+      }
+    ])
+    //go over this
+    .then(function(answer) {
+      connection.query(
+        `SELECT id FROM department WHERE dept_name = ?`,
+        answer.department,
+        function(err, data) {
+          console.log(data)
+          connection.query(
+            'INSERT INTO role SET ?',
+            {
+              title: answer.roleTitle,
+              salary: answer.Salary,
+              department_id: data.id
+            },
+            function(err) {
+              if (err) throw err
+              // console.log('Steven did it')
+              start()
+            }
+          )
+        }
+      )
+    })
+}
+function addDepartment() {
+  inquirer
+    .prompt([
+      {
+        type: 'input',
+        message: 'Please add department',
+        name: 'addDepartment'
+      }
+    ])
+    .then(function(answer) {
+      connection.query(
+        'INSERT INTO department SET ?',
+        {
+          dept_name: answer.addDepartment
+        },
+        function(err) {
+          if (err) throw err
+          console.log('Steven did it')
+          start()
+        }
+      )
+    })
+}
