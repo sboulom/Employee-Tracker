@@ -6,10 +6,10 @@ var connection = mysql.createConnection({
   port: 3306,
   user: 'root',
   password: 'passwordpassword',
-  database: 'employee_db'
+  database: 'employee_db',
 })
 
-connection.connect(function(err) {
+connection.connect(function (err) {
   console.log('connection id' + connection.threadId)
   start()
 })
@@ -34,11 +34,11 @@ function start() {
         addEmp,
         addRole,
         addDepart,
-        quit
+        quit,
       ],
-      name: 'employee'
+      name: 'employee',
     })
-    .then(function(userinput) {
+    .then(function (userinput) {
       console.log(userinput.employee)
       switch (userinput.employee) {
         case viewAllEmp:
@@ -74,7 +74,7 @@ function viewAllEmployee() {
       LEFT JOIN role ON employee.role_id= role.id
       LEFT JOIN department ON department.id = role.department_id
       LEFT JOIN employee employee1 ON employee1.id = employee.manager_id`,
-    function(err, data) {
+    function (err, data) {
       //   console.log(data)
       console.table(data)
       start()
@@ -86,7 +86,7 @@ function viewAllDepartments() {
   connection.query(
     `SELECT department.id, department.dept_name FROM department`,
 
-    function(err, data) {
+    function (err, data) {
       //   console.log(data)
       console.table(data)
       start()
@@ -97,7 +97,7 @@ function viewAllDepartments() {
 function viewAllRoles() {
   connection.query(
     `SELECT id, title, salary, department_id FROM role`,
-    function(err, data) {
+    function (err, data) {
       //   console.log(data)
       console.table(data)
       connection.end()
@@ -112,45 +112,62 @@ function addEmployee(userProfile) {
       {
         type: 'input',
         message: ' Add First Name',
-        name: 'userFirstName'
+        name: 'userFirstName',
       },
       {
         type: 'input',
         message: 'Add Last Name',
-        name: 'userLastName'
+        name: 'userLastName',
       },
       {
         type: 'input',
         message: 'Add Manager Name',
-        name: 'userManagerId'
+        name: 'userManager',
       },
       {
         type: 'input',
         message: 'Add Title',
-        name: 'userRoleId'
-      }
+        name: 'userRole',
+      },
     ])
-    .then(function(answer) {
-      var manager = answer.userManagerId.split(' ')
+    .then(function (answer) {
+      var manager = answer.userManager.split(' ')
+      var role = answer.userRole
+      console.log(manager[0])
+      console.log(manager[1])
+      console.log(role)
       connection.query(
-        `SELECT id FROM employee WHERE first_name = ? and last_name = ?`[
-          (manager[0], manager[1])
+        "SELECT id FROM employee WHERE first_name = ? and last_name = ?",[
+          manager[0], manager[1]
         ],
-        function(data, err) {
-          connection.query(
-            'INSERT INTO employee SET ?',
-            {
-              first_name: answer.userFirstName,
-              last_name: answer.userLastName,
-              manager_id: data.id,
-              role_id: answer.userRoleId
-            },
-            function(err) {
-              if (err) throw err
-              console.log('Steven did it')
-              start()
-            }
-          )
+        function (err, data) {
+          if(err){
+            console.log("a : "+err)
+          }
+          console.log(data)
+          connection.query("SELECT id FROM role WHERE title = ?", [role],
+
+            function (error, roleData) {
+              if(error){
+                console.log(error)
+              }
+              console.log(data.id)
+              console.log(roleData)
+              connection.query(
+                'INSERT INTO employee SET ?',
+                {
+                  first_name: answer.userFirstName,
+                  last_name: answer.userLastName,
+                  manager_id: data.id,
+                  role_id: roleData.id,
+                },
+                function (err) {
+                  if (err) throw err
+                  console.log('Steven did it')
+                  start()
+                }
+              )
+            })
         }
       )
     })
@@ -162,34 +179,34 @@ function addEmpRole() {
       {
         type: 'input',
         message: 'Please add employee title',
-        name: 'roleTitle'
+        name: 'roleTitle',
       },
       {
         type: 'input',
         message: 'Salary',
-        name: 'Salary'
+        name: 'Salary',
       },
       {
         type: 'input',
         message: 'department',
-        name: 'department'
-      }
+        name: 'department',
+      },
     ])
     //go over this
-    .then(function(answer) {
+    .then(function (answer) {
       connection.query(
         `SELECT id FROM department WHERE dept_name = ?`,
         answer.department,
-        function(err, data) {
+        function (err, data) {
           console.log(data)
           connection.query(
             'INSERT INTO role SET ?',
             {
               title: answer.roleTitle,
               salary: answer.Salary,
-              department_id: data.id
+              department_id: data.id,
             },
-            function(err) {
+            function (err) {
               if (err) throw err
               // console.log('Steven did it')
               start()
@@ -205,16 +222,16 @@ function addDepartment() {
       {
         type: 'input',
         message: 'Please add department',
-        name: 'addDepartment'
-      }
+        name: 'addDepartment',
+      },
     ])
-    .then(function(answer) {
+    .then(function (answer) {
       connection.query(
         'INSERT INTO department SET ?',
         {
-          dept_name: answer.addDepartment
+          dept_name: answer.addDepartment,
         },
-        function(err) {
+        function (err) {
           if (err) throw err
           console.log('Steven did it')
           start()
